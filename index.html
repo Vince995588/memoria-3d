@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Memoria 3D — Avatar</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#020711;
+  font-family:Arial,Helvetica,sans-serif;
+  color:#dff8ff;
+}
+
+#app{
+  position:fixed;
+  inset:0;
+}
+
+canvas{
+  display:block;
+}
+
+.hud{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+}
+
+.top{
+  position:absolute;
+  top:20px;
+  left:24px;
+  right:24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo{
+  font-size:22px;
+  letter-spacing:5px;
+  color:#66ddff;
+  text-shadow:0 0 14px #008cff;
+}
+
+.status{
+  border:1px solid rgba(60,200,255,.45);
+  background:rgba(2,15,30,.72);
+  padding:8px 14px;
+  border-radius:20px;
+  font-size:11px;
+  letter-spacing:2px;
+  color:#8eeaff;
+}
+
+.panel{
+  position:absolute;
+  left:24px;
+  bottom:24px;
+  width:245px;
+  padding:18px;
+  border:1px solid rgba(50,190,255,.42);
+  background:linear-gradient(
+    145deg,
+    rgba(4,24,43,.88),
+    rgba(1,8,18,.72)
+  );
+  box-shadow:
+    0 0 30px rgba(0,120,255,.12),
+    inset 0 0 25px rgba(0,160,255,.05);
+  backdrop-filter:blur(8px);
+}
+
+.panel-title{
+  font-size:10px;
+  letter-spacing:3px;
+  color:#55dfff;
+  margin-bottom:12px;
+}
+
+.name{
+  font-size:22px;
+  margin-bottom:5px;
+}
+
+.description{
+  font-size:11px;
+  color:#8ba7b5;
+  line-height:1.5;
+}
+
+.line{
+  height:1px;
+  background:linear-gradient(
+    90deg,
+    rgba(50,210,255,.6),
+    transparent
+  );
+  margin:15px 0;
+}
+
+.readout{
+  display:flex;
+  justify-content:space-between;
+  font-size:10px;
+  margin:7px 0;
+  color:#86aeba;
+}
+
+.readout span:last-child{
+  color:#65e5ff;
+}
+
+.corner{
+  position:absolute;
+  right:24px;
+  bottom:24px;
+  width:150px;
+  text-align:right;
+  font-size:9px;
+  line-height:1.8;
+  color:#477484;
+  letter-spacing:1px;
+}
+
+#loading{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#020711;
+  z-index:10;
+  transition:opacity .8s;
+}
+
+.loader{
+  text-align:center;
+}
+
+.loader-title{
+  font-size:12px;
+  letter-spacing:5px;
+  color:#5ee6ff;
+  margin-bottom:15px;
+}
+
+.loader-bar{
+  width:220px;
+  height:2px;
+  background:#0c2632;
+  overflow:hidden;
+}
+
+.loader-bar div{
+  height:100%;
+  width:30%;
+  background:#4ddfff;
+  box-shadow:0 0 12px #00cfff;
+  animation:load 1.3s infinite;
+}
+
+@keyframes load{
+  0%{transform:translateX(-100%)}
+  100%{transform:translateX(430%)}
+}
+
+#message{
+  display:none;
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  padding:20px;
+  max-width:80%;
+  text-align:center;
+  border:1px solid rgba(70,210,255,.5);
+  background:rgba(2,12,25,.95);
+  color:#8feaff;
+  z-index:20;
+}
+</style>
+
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+    "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+
+<body>
+
+<div id="app"></div>
+
+<div id="loading">
+  <div class="loader">
+    <div class="loader-title">MEMORIA 3D</div>
+    <div class="loader-bar"><div></div></div>
+  </div>
+</div>
+
+<div id="message"></div>
+
+<div class="hud">
+
+  <div class="top">
+    <div class="logo">MEMORIA 3D</div>
+    <div class="status">AVATAR • ONLINE</div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">AVATAR</div>
+    <div class="name">LUNA</div>
+    <div class="description">
+      Presenza digitale della Memoria 3D.
+      Sistema predisposto per movimento,
+      sguardo, voce e interazione con IA.
+    </div>
+
+    <div class="line"></div>
+
+    <div class="readout">
+      <span>STATO</span>
+      <span>ATTIVA</span>
+    </div>
+
+    <div class="readout">
+      <span>VOCE</span>
+      <span>READY</span>
+    </div>
+
+    <div class="readout">
+      <span>IA</span>
+      <span>READY</span>
+    </div>
+
+    <div class="readout">
+      <span>MEMORIA</span>
+      <span>3D</span>
+    </div>
+  </div>
+
+  <div class="corner">
+    CUBO 995<br>
+    SISTEMA VISIVO<br>
+    AVATAR INTERATTIVO<br>
+    BUILD 01
+  </div>
+
+</div>
+
+<script type="module">
+
+import * as THREE from "three";
+import {GLTFLoader} from "three/addons/loaders/GLTFLoader.js";
+import {OrbitControls} from "three/addons/controls/OrbitControls.js";
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x020711);
+
+const camera = new THREE.PerspectiveCamera(
+  42,
+  innerWidth / innerHeight,
+  0.1,
+  100
+);
+
+camera.position.set(4.8,3.1,7.2);
+
+const renderer = new THREE.WebGLRenderer({
+  antialias:true,
+  alpha:false
+});
+
+renderer.setPixelRatio(
+  Math.min(devicePixelRatio,2)
+);
+
+renderer.setSize(
+  innerWidth,
+  innerHeight
+);
+
+renderer.outputColorSpace =
+  THREE.SRGBColorSpace;
+
+renderer.toneMapping =
+  THREE.ACESFilmicToneMapping;
+
+renderer.toneMappingExposure = 1.15;
+
+document
+  .getElementById("app")
+  .appendChild(renderer.domElement);
+
+const controls = new OrbitControls(
+  camera,
+  renderer.domElement
+);
+
+controls.enableDamping = true;
+controls.dampingFactor = 0.055;
+controls.target.set(0,2.1,0);
+
+controls.minDistance = 3.5;
+controls.maxDistance = 11;
+
+controls.maxPolarAngle =
+  Math.PI * 0.82;
+
+controls.minPolarAngle =
+  Math.PI * 0.25;
+
+/* LIGHT */
+
+const ambient =
+  new THREE.HemisphereLight(
+    0x9ddcff,
+    0x02030a,
+    2.2
+  );
+
+scene.add(ambient);
+
+const key =
+  new THREE.DirectionalLight(
+    0xbdeeff,
+    4
+  );
+
+key.position.set(4,8,5);
+scene.add(key);
+
+const rim =
+  new THREE.PointLight(
+    0x008cff,
+    8,
+    12
+  );
+
+rim.position.set(-4,4,-3);
+scene.add(rim);
+
+const front =
+  new THREE.PointLight(
+    0x58dfff,
+    5,
+    10
+  );
+
+front.position.set(2,3,5);
+scene.add(front);
+
+/* FLOOR */
+
+const floorGeometry =
+  new THREE.CircleGeometry(5.2,96);
+
+const floorMaterial =
+  new THREE.MeshStandardMaterial({
+    color:0x06111b,
+    metalness:.65,
+    roughness:.35
+  });
+
+const floor =
+  new THREE.Mesh(
+    floorGeometry,
+    floorMaterial
+  );
+
+floor.rotation.x=-Math.PI/2;
+scene.add(floor);
+
+/* BLUE FLOOR RINGS */
+
+for(let r of [2.2,3.2,4.2]){
+
+  const ring =
+    new THREE.Mesh(
+      new THREE.RingGeometry(
+        r-.006,
+        r+.006,
+        128
+      ),
+      new THREE.MeshBasicMaterial({
+        color:0x159ed0,
+        transparent:true,
+        opacity:.42,
+        side:THREE.DoubleSide
+      })
+    );
+
+  ring.rotation.x=-Math.PI/2;
+  ring.position.y=.012;
+
+  scene.add(ring);
+}
+
+/* MAIN CUBE */
+
+const cubeSize=7;
+
+const cube =
+  new THREE.LineSegments(
+    new THREE.EdgesGeometry(
+      new THREE.BoxGeometry(
+        cubeSize,
+        cubeSize,
+        cubeSize
+      )
+    ),
+    new THREE.LineBasicMaterial({
+      color:0x2ed7ff,
+      transparent:true,
+      opacity:.55
+    })
+  );
+
+cube.position.y=3.5;
+scene.add(cube);
+
+/* CUBE SECONDARY LINES */
+
+const innerCube =
+  new THREE.LineSegments(
+    new THREE.EdgesGeometry(
+      new THREE.BoxGeometry(
+        6.5,
+        6.5,
+        6.5
+      )
+    ),
+    new THREE.LineBasicMaterial({
+      color:0x087db5,
+      transparent:true,
+      opacity:.22
+    })
+  );
+
+innerCube.position.y=3.5;
+scene.add(innerCube);
+
+/* MEMORY NODES */
+
+const nodes =
+  new THREE.Group();
+
+scene.add(nodes);
+
+for(let i=0;i<32;i++){
+
+  const a =
+    (i/32)*Math.PI*2;
+
+  const radius =
+    3.15 + Math.sin(i*2.4)*.25;
+
+  const x =
+    Math.cos(a)*radius;
+
+  const z =
+    Math.sin(a)*radius;
+
+  const y =
+    1.2 +
+    (i%8)*.55;
+
+  const node =
+    new THREE.Mesh(
+      new THREE.SphereGeometry(.025,8,8),
+      new THREE.MeshBasicMaterial({
+        color:0x45dfff
+      })
+    );
+
+  node.position.set(x,y,z);
+  nodes.add(node);
+}
+
+/* AVATAR */
+
+let avatar=null;
+let mixer=null;
+let idleAction=null;
+
+const loader =
+  new GLTFLoader();
+
+const avatarURL =
+  "https://raw.githubusercontent.com/mergeos-bounties/BeeAR/master/packages/catalog/glb/person_female.glb";
+
+loader.load(
+  avatarURL,
+
+  function(gltf){
+
+    avatar=gltf.scene;
+
+    avatar.scale.setScalar(2.25);
+
+    avatar.position.set(
+      0,
+      0,
+      0
+    );
+
+    scene.add(avatar);
+
+    /* NORMALIZE MATERIALS */
+
+    avatar.traverse(
+      function(object){
+
+        if(object.isMesh){
+
+          object.castShadow=true;
+          object.receiveShadow=true;
+
+          if(object.material){
+
+            object.material.envMapIntensity=1.1;
+
+          }
+        }
+
+      }
+    );
+
+    if(gltf.animations.length){
+
+      mixer =
+        new THREE.AnimationMixer(
+          avatar
+        );
+
+      idleAction =
+        mixer.clipAction(
+          gltf.animations[0]
+        );
+
+      idleAction.play();
+    }
+
+    document
+      .getElementById("loading")
+      .style.opacity="0";
+
+    setTimeout(
+      ()=>{
+        document
+          .getElementById("loading")
+          .style.display="none";
+      },
+      850
+    );
+  },
+
+  undefined,
+
+  function(error){
+
+    console.error(error);
+
+    const loading =
+      document.getElementById("loading");
+
+    loading.style.display="none";
+
+    const message =
+      document.getElementById("message");
+
+    message.style.display="block";
+
+    message.innerHTML=
+      "Il modello 3D non è stato caricato.<br><br>"+
+      "La scena Memoria 3D è comunque pronta.";
+
+  }
+);
+
+/* ANIMATION */
+
+const clock =
+  new THREE.Clock();
+
+function animate(){
+
+  requestAnimationFrame(
+    animate
+  );
+
+  const delta =
+    clock.getDelta();
+
+  const elapsed =
+    clock.elapsedTime;
+
+  if(mixer){
+    mixer.update(delta);
+  }
+
+  if(avatar){
+
+    /* respirazione molto leggera */
+
+    avatar.position.y =
+      Math.sin(elapsed*1.5)*.008;
+
+    /* piccolo movimento naturale */
+
+    avatar.rotation.y =
+      Math.sin(elapsed*.35)*.035;
+  }
+
+  cube.rotation.y =
+    Math.sin(elapsed*.12)*.04;
+
+  innerCube.rotation.y =
+    -Math.sin(elapsed*.16)*.025;
+
+  nodes.rotation.y =
+    elapsed*.015;
+
+  controls.update();
+
+  renderer.render(
+    scene,
+    camera
+  );
+}
+
+animate();
+
+/* RESIZE */
+
+window.addEventListener(
+  "resize",
+  ()=>{
+    camera.aspect =
+      innerWidth/innerHeight;
+
+    camera.updateProjectionMatrix();
+
+    renderer.setSize(
+      innerWidth,
+      innerHeight
+    );
+  }
+);
+
+</script>
+
+</body>
+  </html>
